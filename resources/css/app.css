@@ -1,0 +1,39 @@
+/* Identitas visual Portal Berita */
+:root {
+    --pb-primary: #0f3d6e;
+    --pb-primary-dark: #0a2a4d;
+    --pb-accent: #e8590c;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+}
+
+.brand-logo {
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--pb-primary);
+}
+
+.brand-logo span {
+    color: var(--pb-accent);
+}
+
+.btn-brand {
+    background-color: var(--pb-primary);
+    border-color: var(--pb-primary);
+    color: #fff;
+}
+
+.btn-brand:hover,
+.btn-brand:focus {
+    background-color: var(--pb-primary-dark);
+    border-color: var(--pb-primary-dark);
+    color: #fff;
+}
+
+.text-brand {
+    color: var(--pb-primary);
+}

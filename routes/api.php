@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
@@ -22,6 +22,17 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
 
     // Semua peran
     Route::get('jenis-sayur', [Shared\VegetableTypeController::class, 'index']);
+    Route::get('dashboard', [Shared\DashboardController::class, 'index']);
+    Route::post('profile', [Shared\ProfileController::class, 'update']);
+    Route::get('penjual/{sellerId}/rating', [Shared\SellerRatingController::class, 'show']);
+
+    // Chat: petani, agen desa, pembeli
+    Route::prefix('chat')->middleware('role:petani,agen_desa,pembeli')->group(function () {
+        Route::get('threads', [Shared\ChatController::class, 'threads']);
+        Route::post('threads', [Shared\ChatController::class, 'start'])->middleware('role:pembeli');
+        Route::get('threads/{threadId}/messages', [Shared\ChatController::class, 'messages']);
+        Route::post('threads/{threadId}/messages', [Shared\ChatController::class, 'send'])->middleware('throttle:30,1');
+    });
 
     // Petani dan agen desa
     Route::prefix('petani')->middleware('role:petani,agen_desa')->group(function () {
@@ -32,9 +43,14 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
         Route::post('listings/{id}/confirm', [Petani\ListingController::class, 'confirm']);
         Route::post('listings/{id}/withdraw', [Petani\ListingController::class, 'withdraw']);
 
+        Route::post('listings/{listingId}/photos', [Petani\ListingPhotoController::class, 'store'])->middleware('throttle:20,1');
+        Route::delete('listings/{listingId}/photos/{photoId}', [Petani\ListingPhotoController::class, 'destroy']);
+
         Route::get('orders', [Petani\OrderController::class, 'index']);
         Route::get('orders/{id}', [Petani\OrderController::class, 'show']);
         Route::patch('orders/{id}/status', [Petani\OrderController::class, 'updateStatus']);
+
+        Route::get('ratings', [Petani\RatingController::class, 'index']);
     });
 
     // Pembeli
@@ -51,19 +67,26 @@ Route::middleware(['auth:sanctum', 'aktif'])->group(function () {
         Route::get('orders', [Pembeli\OrderController::class, 'index']);
         Route::get('orders/{id}', [Pembeli\OrderController::class, 'show']);
 
-        // Hanya akun terverifikasi admin mitra yang boleh memesan.
         Route::middleware('terverifikasi')->group(function () {
             Route::post('orders/direct', [Pembeli\OrderController::class, 'direct']);
             Route::post('orders/checkout', [Pembeli\OrderController::class, 'checkout']);
         });
         Route::post('orders/{id}/cancel', [Pembeli\OrderController::class, 'cancel']);
         Route::post('orders/{id}/complete', [Pembeli\OrderController::class, 'complete']);
+        Route::post('orders/{id}/pay', [Pembeli\PaymentController::class, 'pay']);
+        Route::post('orders/{orderId}/rating', [Pembeli\RatingController::class, 'store']);
     });
 
     // Admin mitra (admin juga boleh)
     Route::prefix('admin-mitra')->middleware('role:admin_mitra,admin')->group(function () {
         Route::get('verifikasi', [AdminMitra\VerificationController::class, 'index']);
         Route::post('verifikasi/{id}/approve', [AdminMitra\VerificationController::class, 'approve']);
+
+        Route::get('organisasi', [AdminMitra\OrganizationController::class, 'index']);
+        Route::post('organisasi', [AdminMitra\OrganizationController::class, 'store']);
+        Route::put('organisasi/{id}', [AdminMitra\OrganizationController::class, 'update']);
+        Route::post('organisasi/{id}/verify', [AdminMitra\OrganizationController::class, 'verify']);
+        Route::post('organisasi/{id}/anggota', [AdminMitra\OrganizationController::class, 'attachUser']);
     });
 
     // Admin

@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class OrderRepository extends BaseRepository implements OrderRepositoryInterface
 {
-    private const WITH = ['items.listing:id,title,unit', 'payment', 'buyer:id,name,desa,kecamatan'];
+    private const WITH = ['items.listing:id,title,unit', 'items.seller:id,name', 'payment', 'buyer:id,name,desa,kecamatan'];
 
     public function __construct()
     {
